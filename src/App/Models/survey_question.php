@@ -94,7 +94,7 @@ class Question extends MyEntity
     /**
      * Set choices.
      *
-     * @param text $choices
+     * @param array $choices
      *
      * @return Question
      */
