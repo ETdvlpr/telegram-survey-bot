@@ -17,11 +17,26 @@
         }
     ],
     "require": {
-        "longman/telegram-bot": "*"
+        "longman/telegram-bot": "^0.80.0",
+        "monolog/monolog": "^3.3",
+        "doctrine/orm": "^2.14",
+        "doctrine/dbal": "^3.6",
+        "symfony/cache": "^6.2",
+        "doctrine/annotations": "^2.0",
+        "symfony/yaml": "^6.2"
     },
     "require-dev": {
         "php-parallel-lint/php-parallel-lint": "^1.2",
         "squizlabs/php_codesniffer": "^3.5"
+    },
+    "autoload": {
+        "psr-0": { "": "src/" },
+        "psr-4": {
+            "App\\": "src/App/"
+        },
+        "classmap": [
+            "src/App"
+        ]
     },
     "scripts": {
         "check-code": [
