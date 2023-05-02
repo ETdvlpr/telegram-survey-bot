@@ -213,7 +213,8 @@ class SurveyController
             case "location":
                 return $message != null && $message->getLocation() != null;
             case "contact":
-                return $message != null && $message->getContact() != null;
+                //accept number aswell
+                return ($message != null && $message->getContact() != null) || is_numeric($text);
         }
     }
 
@@ -231,7 +232,7 @@ class SurveyController
             case "location":
                 return "lng: {$message->getLocation()->getLongitude()}, lat: {$message->getLocation()->getLatitude()}";
             case "contact":
-                return $message->getContact()->getPhoneNumber();
+                return ($message != null && $message->getContact() != null) ? $message->getContact()->getPhoneNumber() : $text;
         }
     }
 
