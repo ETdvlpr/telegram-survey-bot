@@ -20,7 +20,7 @@ class User extends MyEntity
     /**
      * @ORM\Column(type="text",nullable=true)
      */
-    private ?string $preferences;
+    private ?string $preferences = null;
 
     /**
      * @ORM\Column(type="text",nullable=true)

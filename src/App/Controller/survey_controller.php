@@ -11,6 +11,7 @@ use Longman\TelegramBot\Request;
 use Longman\TelegramBot\Entities\Keyboard;
 use Longman\TelegramBot\Entities\KeyboardButton;
 use Longman\TelegramBot\Entities\InlineKeyboard;
+use Longman\TelegramBot\Entities\InputMedia\InputMediaPhoto;
 use Longman\TelegramBot\Entities\Message;
 use Longman\TelegramBot\Entities\ServerResponse;
 
@@ -86,9 +87,8 @@ class SurveyController
         if ($state == 0) {
             $surveys = $this->getAll();
             $surveyIDs = array_map(function ($s) {
-                return $s->getId();
+                return "" . $s->getId();
             }, $surveys);
-
             // If no input or input doesn't match survey selection, request survey selection
             if ($text === '' || !in_array($text, $surveyIDs, true)) {
                 $keyboard = array_map(function ($v) use ($translator) {
@@ -151,25 +151,45 @@ class SurveyController
                     ]);
                 }
                 $out_text = 'Registration complete:' . PHP_EOL;
-                $hasFile = false;
+                $images = 0;
                 $data = [];
 
                 foreach ($survey->getSurveyQuestions() as $sq) {
                     $a = $sq->getAnswersFromUser($user->getId());
                     $answerText = $a != null ? $a->getText() : "-";
 
-                    if ($sq->getQuestion()->getType() == "image") {
-                        $hasFile = true;
-                        $data['photo'][] = $answerText;
+                    if ($sq->getQuestion()->getType() == "image" && $answerText != "-") {
+                        $data[] = new InputMediaPhoto(['media' => $answerText]);
+                        $images++;
+                    } else {
+                        $out_text .= PHP_EOL . $translator->translate($sq->getQuestion()->getText()) . ': ' . $translator->translate($answerText);
                     }
-
-                    $out_text .= PHP_EOL . $sq->getQuestion()->getText() . ': ' . $answerText;
                 }
 
-                $data[$hasFile ? 'caption' : 'text'] = $out_text;
-                $data['chat_id'] = $conversation->getChatId();
                 $conversation->stop();
-                return $hasFile ? Request::sendMediaGroup(['media' => $data]) : Request::sendMessage($data);
+
+                if ($images == 0) {
+                    // Return text message
+                    return Request::sendMessage([
+                        'chat_id' => $conversation->getChatId(),
+                        'text' => $out_text
+                    ]);
+                }
+
+                if ($images == 1) {
+                    // Return photo message
+                    return Request::sendPhoto([
+                        'chat_id' => $conversation->getChatId(),
+                        'photo' => $data[0]->getMedia(),
+                        'caption' => $out_text,
+                    ]);
+                }
+                $data[0]->setCaption($out_text);
+                // Return media group message
+                return Request::sendMediaGroup([
+                    'chat_id' => $conversation->getChatId(),
+                    'media' => $data
+                ]);
             } else {
                 $result = $this->askQuestion($survey->getQuestions()[$state], $conversation->getChatId(), $translator);
                 $notes['state'] = $state + 1;
@@ -212,7 +232,7 @@ class SurveyController
         }
     }
 
-    function validAnswer($question, $text, $message): bool
+    function validAnswer(Question $question, ?string $text, $message): bool
     {
         if (empty($text) && $text !== "0" && in_array($question->getType(), ["text", "number", "choice"], true)) return false;
         ///@TODO add default cases

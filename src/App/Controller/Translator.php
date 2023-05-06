@@ -10,9 +10,9 @@ class Translator
     private $entityManager;
     private $translations;
 
-    public function __construct(string $locale = 'en')
+    public function __construct(?string $locale)
     {
-        $this->locale = $locale;
+        $this->locale = $locale ?? 'en';
         $this->entityManager = DbContext::get_entity_manager();
         $this->translations = $this->entityManager->getRepository("App\Models\Translation")->findAll();
     }
